@@ -22,8 +22,6 @@ func Compose2(path string, output string) {
 	fmt.Println("正在获取列表")
 	list := SearchFile(path)
 	compress(output, list)
-	//fmt.Println("完成", BasePath , "按任意键退出")
-	//fmt.Scanln()
 }
 
 //获取文件列表
@@ -33,10 +31,6 @@ func SearchFile(BasePath string) *[]fileInfo {
 		if info == nil {
 			return err
 		}
-		//match, _ := regexp.MatchString("idea|work|\\.tar|\\.exe", path)
-		//if match {
-		//	return nil
-		//}
 		if path != BasePath {
 			list = append(list, fileInfo{
 				info:     info,
@@ -105,34 +99,3 @@ func packOne(data *fileInfo, tarWriter *tar.Writer) error {
 	}
 	return nil
 }
-
-//func compress(file *fileInfo, tw *tar.Writer) error {
-//	info := file.info
-//	path := file.path
-//	if info.IsDir() {
-//
-//	}else{
-//
-//		header, err := tar.FileInfoHeader(info, "")
-//		header.Name = strings.TrimPrefix(path, BasePath)
-//		if err != nil {
-//			return err
-//		}
-//		err = tw.WriteHeader(header)
-//		if err != nil {
-//			return err
-//		}
-//		buf, err := os.Open(file.path)
-//		if err != nil {
-//			fmt.Println("文件打开失败", err)
-//			panic(err)
-//		}
-//		defer buf.Close()
-//		_, err = io.Copy(tw, buf)
-//		if err != nil {
-//			return err
-//		}
-//	}
-//	return nil
-//}
-//

@@ -2,7 +2,7 @@
 
 克隆代码到本地
 
-`git clone http://gitlab.yingfankeji.net/Gu/tartool.git`
+`git clone https://gitee.com/N-age/TARSTOOL`
 
 然后运行 `init.cmd` 
 
