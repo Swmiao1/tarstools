@@ -62,16 +62,18 @@ func compress(dest string, list *[]fileInfo) error {
 }
 
 func packOne(data *fileInfo, tarWriter *tar.Writer) error {
-	println(data.BasePath)
+	if data.BasePath == "" {
+		return nil
+	}
+	//获取 HEADER
+	header, err := tar.FileInfoHeader(data.info, "")
+	if err != nil {
+		return err
+	}
+	header.Name = strings.Replace(data.BasePath, "\\", "/", -1)
+	println(header.Name)
+	//进行压缩
 	if data.info.IsDir() {
-		if data.BasePath == "" {
-			return nil
-		}
-		header, err := tar.FileInfoHeader(data.info, "")
-		if err != nil {
-			return err
-		}
-		header.Name = data.BasePath
 		if err = tarWriter.WriteHeader(header); err != nil {
 			return err
 		}
@@ -84,11 +86,6 @@ func packOne(data *fileInfo, tarWriter *tar.Writer) error {
 			panic(err)
 		}
 		defer buf.Close()
-		header, err := tar.FileInfoHeader(data.info, "")
-		if err != nil {
-			return err
-		}
-		header.Name = data.BasePath
 		if err = tarWriter.WriteHeader(header); err != nil {
 			return err
 		}
