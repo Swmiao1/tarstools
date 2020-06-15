@@ -28,6 +28,6 @@
 可用参数 `-u` 上传到 tars `-p` 发布
 
 ```powershell
-build -u -p im Hello
+packtar -u -p im Hello
 ```
 
