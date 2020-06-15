@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"tartools/cmd"
 	"tartools/tar"
@@ -49,12 +50,16 @@ func main() {
 	//上传
 	if isUpload {
 		//获取配置
-		file, _ := os.Open("tools_config.json")
+		file, err := os.Open("tools_config.json")
+		if err != nil {
+			createConfig()
+			return
+		}
 		defer file.Close()
 		//读取文件
 		decoder := json.NewDecoder(file)
 		conf := upload.Config{}
-		err := decoder.Decode(&conf)
+		err = decoder.Decode(&conf)
 		if err != nil {
 			fmt.Println("json:", err)
 			return
@@ -63,6 +68,7 @@ func main() {
 		if isPublic {
 			conf.UploadMod = 1
 		}
+
 		conf.Upload(app, service, tgzPath)
 	}
 }
@@ -92,3 +98,17 @@ func build(path string) {
 	}
 	println("编译成功")
 }
+
+func createConfig() {
+	fmt.Println("未找到配置文件,是否创建默认文件(y)/n")
+	ret := ""
+	fmt.Scan(&ret)
+	if ret == "y" || ret == "" {
+		configFile, _ := os.Create("tools_config.json")
+		defer configFile.Close()
+		_, _ = io.WriteString(configFile, tarsConfig)
+		fmt.Println("创建完成,请修改配置后重新运行")
+	}
+}
+
+const tarsConfig = "{\n  \"tars_url\" : \"http://47.57.119.12:3000\",\n  \"token\" : \"\"\n}"
