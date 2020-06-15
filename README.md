@@ -20,6 +20,11 @@
   "token" : ""
 }
 ```
+###token获取方法
+打开此页面 `你的tars地址/auth.html#/token`
+点击新增Token
+
+
 可用参数 `-u` 上传到 tars `-p` 发布
 
 ```powershell
