@@ -57,7 +57,6 @@ func compress(dest string, list *[]fileInfo) error {
 			return err
 		}
 	}
-	fmt.Println()
 	return nil
 }
 
