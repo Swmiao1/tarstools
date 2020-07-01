@@ -15,6 +15,7 @@ import (
 var (
 	app      string
 	service  string
+	tag      string
 	isUpload bool
 	isPublic bool
 )
@@ -22,6 +23,7 @@ var (
 func init() {
 	flag.BoolVar(&isUpload, "u", false, "是否上传")
 	flag.BoolVar(&isPublic, "p", false, "是否发布")
+	flag.StringVar(&tag, "t", "", "编译标签")
 }
 
 func main() {
@@ -42,7 +44,7 @@ func main() {
 	//删除目录
 	defer DelTempDir(tempPath)
 	//编译
-	build(tempPath)
+	build(tempPath, tag)
 	//生成随机文件名
 	tgzPath := fmt.Sprintf("%v_%v_%v.tgz", app, service, time.Now().Format("01_02_15_04_05"))
 	//打包压缩文件
@@ -64,9 +66,12 @@ func main() {
 			fmt.Println("json:", err)
 			return
 		}
-		println("正在上传:", tgzPath)
+
 		if isPublic {
 			conf.UploadMod = 1
+			println("正在上传并发布:", tgzPath)
+		} else {
+			println("正在上传:", tgzPath)
 		}
 
 		conf.Upload(app, service, tgzPath)
@@ -90,10 +95,11 @@ func DelTempDir(path string) {
 }
 
 //编译程序
-func build(path string) {
+func build(path string, tag string) {
 	println("正在编译")
-	ok, err := cmd.Build(path + service + "\\" + service)
+	ok, err := cmd.Build(path+service+"\\"+service, tag)
 	if !ok {
+		fmt.Println(err)
 		panic(err)
 	}
 	println("编译成功")

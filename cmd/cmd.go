@@ -16,13 +16,14 @@ func ConvertToByte(src string, srcCode string, targetCode string) []byte {
 	return cdata
 }
 
-func Build(path string) (bool, error) {
-	cmd := exec.Command("build", path)
+func Build(path string, tag string) (bool, error) {
+	cmd := exec.Command("build", path, tag)
 	buf, err := cmd.Output()
+	ret := string(ConvertToByte(string(buf), "gbk", "utf8"))
 	if err != nil {
 		fmt.Println(err.Error())
+		fmt.Println(ret)
 	}
-	ret := string(ConvertToByte(string(buf), "gbk", "utf8"))
 	if strings.Contains(ret, "编译成功") {
 		return true, nil
 	} else {

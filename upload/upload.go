@@ -64,6 +64,7 @@ func (c *Config) Upload(app string, service string, file string) {
 		//upload_patch_package 上传
 		url = c.TarsUrl + "/pages/server/api/upload_patch_package"
 	}
+	fmt.Println("post:" + url)
 	request, err := c.newfileUploadRequest(url, extraParams, "suse", file)
 	if err != nil {
 		log.Fatal(err)
