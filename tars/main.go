@@ -3,9 +3,10 @@ package tars
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/Swmiao1/tarstools/config"
+	"github.com/Swmiao1/tarstools/util"
 	"io/ioutil"
-	"tarstools/config"
-	"tarstools/util"
+
 	"time"
 )
 

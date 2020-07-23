@@ -2,11 +2,11 @@ package util
 
 import (
 	"fmt"
+	"github.com/Swmiao1/tarstools/tar"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
-	"tarstools/tar"
 )
 
 type folder struct {

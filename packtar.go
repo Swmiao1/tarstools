@@ -3,11 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/Swmiao1/tarstools/cmd"
+	"github.com/Swmiao1/tarstools/config"
+	"github.com/Swmiao1/tarstools/tars"
+	"github.com/Swmiao1/tarstools/util"
 	"os"
-	"tarstools/cmd"
-	"tarstools/config"
-	"tarstools/tars"
-	"tarstools/util"
 	"time"
 )
 

@@ -3,11 +3,11 @@ package cmd
 import (
 	"bufio"
 	"fmt"
+	"github.com/Swmiao1/tarstools/util"
 	"io"
 	"os"
 	"os/exec"
 	"strings"
-	"tarstools/util"
 )
 
 type cmdText struct {
