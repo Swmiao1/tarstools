@@ -1,120 +1,83 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
-	"io"
 	"os"
 	"tartools/cmd"
-	"tartools/tar"
-	"tartools/upload"
+	"tartools/config"
+	"tartools/tars"
+	"tartools/util"
 	"time"
 )
 
-var (
-	app      string
-	service  string
-	tag      string
-	isUpload bool
-	isPublic bool
-)
-
-func init() {
-	flag.BoolVar(&isUpload, "u", false, "是否上传")
-	flag.BoolVar(&isPublic, "p", false, "是否发布")
-	flag.StringVar(&tag, "t", "", "编译标签")
-}
-
 func main() {
-	//绑定参数
-	flag.Parse()
-	args := flag.Args()
-	if len(args) < 2 {
-		fmt.Printf("build <应用名> <服务名>")
+	//args := flag.Args()
+	//是否调用帮助
+	if config.Config.IsHelp {
+		fmt.Print()
+		_, _ = fmt.Fprintf(os.Stderr, "Usage: tarstools [-u] [-p] [-t tag] [-clear] [-a app] [-s service]\nOptions:")
+		flag.PrintDefaults()
 		return
 	}
-	app = args[0]
-	service = args[1]
-	fmt.Printf("app:%v service:%v\n", app, service)
+	//读取配置文件
+	if !config.Config.ReadFile() {
+		return
+	}
 	//生成临时目录
-	tempPath := fmt.Sprintf("temp_%v_%v\\", app, time.Now().Nanosecond())
-	//创建文件夹
-	makeTempDir(tempPath)
-	//删除目录
-	defer DelTempDir(tempPath)
+	tempFolder := util.NewFolder(fmt.Sprintf("temp_%v_%v/%v", config.Config.Service, time.Now().Nanosecond(), config.Config.Service))
+	tempFolder.Make()
+	defer tempFolder.Del()
+	//编译文件
+	Exec := cmd.NewCmd()
+	//Exec.Log()
+	//设置环境变量 GOOS=linux
+	Exec.Input("set GOOS=linux")
+	Exec.Input("set GO111MODULE=on")
 	//编译
-	build(tempPath, tag)
-	//生成随机文件名
-	tgzPath := fmt.Sprintf("%v_%v_%v.tgz", app, service, time.Now().Format("01_02_15_04_05"))
+	var tags = ""
+	if len(config.Config.Tag) > 0 {
+		tags = " -tags " + config.Config.Tag
+	}
+	buildStr := fmt.Sprintf("go build -ldflags \"-s -w\"%v -o %v", tags, tempFolder.Path+"/"+config.Config.Service)
+	fmt.Println("正在编译:", buildStr)
+	Exec.Input(buildStr)
+	Exec.Input("exit")
+	_ = Exec.Cmd.Wait()
+
+	if Exec.IsErr {
+		return
+	}
+	//移入包含文件
+	//for k, s := range config.Config.IncludeFile {
+	//	util.CopyFile(k, s)
+	//}
 	//打包压缩文件
-	tar.Compose2(tempPath, tgzPath)
-	//上传
-	if isUpload {
-		//获取配置
-		file, err := os.Open("tools_config.json")
-		if err != nil {
-			createConfig()
+	//生成随机文件名
+	tgzPath := fmt.Sprintf("%v_%v_%v.tgz", config.Config.App, config.Config.Service, time.Now().Format("01_02_15_04_05"))
+	fmt.Print("打包:")
+	//打包压缩文件
+	tempFolder.Compress(tgzPath)
+	tempFolder.Del()
+	//上传文件
+	if config.Config.IsUpload {
+		//判断配置
+		if config.Config.TarsUrl == "" || config.Config.Token == "" {
+			fmt.Fprintln(os.Stderr, "请配置TarsUrl和Token")
 			return
 		}
-		defer file.Close()
-		//读取文件
-		decoder := json.NewDecoder(file)
-		conf := upload.Config{}
-		err = decoder.Decode(&conf)
-		if err != nil {
-			fmt.Println("json:", err)
-			return
+		Tars := tars.Tars{
+			Url:   config.Config.TarsUrl,
+			Token: config.Config.Token,
 		}
+		if config.Config.IsPublic {
+			//发布
 
-		if isPublic {
-			conf.UploadMod = 1
-			println("正在上传并发布:", tgzPath)
 		} else {
-			println("正在上传:", tgzPath)
+			//上传
+			fmt.Printf("正在上传:%v.%v\n", config.Config.App, config.Config.Service)
+			Tars.Upload(tgzPath)
 		}
-
-		conf.Upload(app, service, tgzPath)
 	}
-}
 
-//创建临时目录
-func makeTempDir(path string) {
-	err := os.MkdirAll(path+service, os.ModePerm)
-	if err != nil {
-		panic(err)
-	}
 }
-
-//创建临时目录
-func DelTempDir(path string) {
-	err := os.RemoveAll(path)
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-}
-
-//编译程序
-func build(path string, tag string) {
-	println("正在编译")
-	ok, err := cmd.Build(path+service+"\\"+service, tag)
-	if !ok {
-		fmt.Println(err)
-		panic(err)
-	}
-	println("编译成功")
-}
-
-func createConfig() {
-	fmt.Println("未找到配置文件,是否创建默认文件(y)/n")
-	ret := ""
-	fmt.Scan(&ret)
-	if ret == "y" || ret == "" {
-		configFile, _ := os.Create("tools_config.json")
-		defer configFile.Close()
-		_, _ = io.WriteString(configFile, tarsConfig)
-		fmt.Println("创建完成,请修改配置后重新运行")
-	}
-}
-
-const tarsConfig = "{\n  \"tars_url\" : \"http://47.57.119.12:3000\",\n  \"token\" : \"\"\n}"

@@ -24,6 +24,7 @@ func (c *Config) newfileUploadRequest(uri string, params map[string]string, para
 
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
+
 	part, err := writer.CreateFormFile(paramName, filepath.Base(path))
 	if err != nil {
 		return nil, err

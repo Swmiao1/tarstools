@@ -7,91 +7,80 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
+	"runtime"
 )
 
-type fileInfo struct {
-	info     os.FileInfo
-	BasePath string
-	path     string
+var sysType string
+
+func init() {
+	sysType = runtime.GOOS
 }
 
-func Compose2(path string, output string) {
-
-	//获取文件
-	fmt.Println("正在获取列表")
-	list := SearchFile(path)
-	compress(output, list)
-}
-
-//获取文件列表
-func SearchFile(BasePath string) *[]fileInfo {
-	var list []fileInfo
-	filepath.Walk(BasePath, func(path string, info os.FileInfo, err error) error {
-		if info == nil {
-			return err
-		}
-		if path != BasePath {
-			list = append(list, fileInfo{
-				info:     info,
-				path:     path,
-				BasePath: strings.TrimPrefix(path, BasePath),
-			})
-		}
-		return nil
-	})
-	return &list
-}
-
-//压缩 使用gzip压缩成tar.gz
-func compress(dest string, list *[]fileInfo) error {
-	d, _ := os.Create(dest)
-	defer d.Close()
-	gzipWriter := gzip.NewWriter(d)
-	defer gzipWriter.Close()
-	tarWriter := tar.NewWriter(gzipWriter)
-	defer tarWriter.Close()
-	for _, file := range *list {
-		err := packOne(&file, tarWriter)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func packOne(data *fileInfo, tarWriter *tar.Writer) error {
-	if data.BasePath == "" {
-		return nil
-	}
-	//获取 HEADER
-	header, err := tar.FileInfoHeader(data.info, "")
+func NewFile(dest string) *File {
+	var err error
+	temp := &File{}
+	//创建文件
+	temp.FileId, err = os.Create(dest)
 	if err != nil {
-		return err
+		fmt.Println(err.Error())
 	}
-	header.Name = strings.Replace(data.BasePath, "\\", "/", -1)
-	println(header.Name)
-	//进行压缩
-	if data.info.IsDir() {
-		if err = tarWriter.WriteHeader(header); err != nil {
-			return err
-		}
-		//os.Mkdir(data.BasePath, os.ModeDir)
-	} else {
-		//打开文件
-		buf, err := os.Open(data.path)
+	temp.Gzip = gzip.NewWriter(temp.FileId)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	temp.Tar = tar.NewWriter(temp.Gzip)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	return temp
+}
+
+type File struct {
+	FileId *os.File
+	Gzip   *gzip.Writer
+	Tar    *tar.Writer
+}
+
+func (f *File) Close() {
+	_ = f.Tar.Close()
+	_ = f.Gzip.Close()
+	_ = f.FileId.Close()
+}
+
+type FileList struct {
+	Info     os.FileInfo
+	BasePath string
+	FillPath string
+}
+
+func (f *File) Compress(list *[]FileList) error {
+	for _, file := range *list {
+		//获取 HEADER
+		header, err := tar.FileInfoHeader(file.Info, "")
 		if err != nil {
-			fmt.Println("文件打开失败", err)
-			panic(err)
-		}
-		defer buf.Close()
-		if err = tarWriter.WriteHeader(header); err != nil {
 			return err
 		}
-		//复制
-		if _, err = io.Copy(tarWriter, buf); err != nil {
+		//转换成linux符号
+		header.Name = filepath.ToSlash(file.BasePath)
+		//写入文件头
+		if err = f.Tar.WriteHeader(header); err != nil {
 			return err
+		}
+		//进行压缩
+		if !file.Info.IsDir() {
+			//打开文件
+			buf, err := os.Open(file.FillPath)
+			if err != nil {
+				fmt.Println("文件打开失败", err)
+				panic(err)
+			}
+			//复制
+			if _, err = io.Copy(f.Tar, buf); err != nil {
+				return err
+			}
+			_ = buf.Close()
 		}
 	}
+	fmt.Println("打包完成")
 	return nil
 }
