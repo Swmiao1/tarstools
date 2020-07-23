@@ -1,4 +1,4 @@
-module tarstools
+module github.com/Swmiao1/tarstools
 
 go 1.14
 
