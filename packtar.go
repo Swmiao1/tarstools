@@ -58,7 +58,6 @@ func main() {
 	fmt.Print("打包:")
 	//打包压缩文件
 	tempFolder.Compress(tgzPath)
-	tempFolder.Del()
 	//上传文件
 	if config.Config.IsUpload {
 		//判断配置

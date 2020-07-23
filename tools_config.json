@@ -1,9 +1,0 @@
-{
-  "app": "im",
-  "service": "Send",
-  "token": "16470978ed7097b16474638d00ba503206d401ba",
-  "tars_url": "http://47.57.119.12:3000/",
-  "includeFile": [
-
-  ]
-}
