@@ -11,8 +11,10 @@ import (
 	"time"
 )
 
+const version = "v0.0.4"
+
 func main() {
-	//args := flag.Args()
+	fmt.Println("version:", version)
 	//是否调用帮助
 	if config.Config.IsHelp {
 		fmt.Print()
@@ -31,6 +33,7 @@ func main() {
 	//生成临时目录
 	tempFolder := util.NewFolder(fmt.Sprintf("temp_%v_%v/%v", config.Config.Service, time.Now().Nanosecond(), config.Config.Service))
 	tempFolder.Make()
+	defer tempFolder.Del()
 	//编译文件
 	Exec := cmd.NewCmd()
 	//Exec.Log()
