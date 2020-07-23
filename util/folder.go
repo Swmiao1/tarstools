@@ -30,7 +30,7 @@ func (f *folder) Compress(fileName string) {
 	//获取目录下所有文件
 	list := f.getFileList()
 	tarFile := tar.NewFile(fileName)
-	tarFile.Compress(list)
+	_ = tarFile.Compress(list)
 	defer tarFile.Close()
 }
 

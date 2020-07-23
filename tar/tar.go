@@ -7,14 +7,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"runtime"
 )
-
-var sysType string
-
-func init() {
-	sysType = runtime.GOOS
-}
 
 func NewFile(dest string) *File {
 	var err error

@@ -20,6 +20,10 @@ func main() {
 		flag.PrintDefaults()
 		return
 	}
+	//是否是清理 tgz
+	if config.Config.IsClear {
+		util.ClearTgz()
+	}
 	//读取配置文件
 	if !config.Config.ReadFile() {
 		return
@@ -27,7 +31,6 @@ func main() {
 	//生成临时目录
 	tempFolder := util.NewFolder(fmt.Sprintf("temp_%v_%v/%v", config.Config.Service, time.Now().Nanosecond(), config.Config.Service))
 	tempFolder.Make()
-	defer tempFolder.Del()
 	//编译文件
 	Exec := cmd.NewCmd()
 	//Exec.Log()
@@ -48,15 +51,17 @@ func main() {
 		return
 	}
 	//移入包含文件
-	//for k, s := range config.Config.IncludeFile {
-	//	util.CopyFile(k, s)
-	//}
+	for k, s := range config.Config.IncludeFile {
+		util.CopyFile(k, tempFolder.Path+s)
+	}
 	//打包压缩文件
 	//生成随机文件名
 	tgzPath := fmt.Sprintf("%v_%v_%v.tgz", config.Config.App, config.Config.Service, time.Now().Format("01_02_15_04_05"))
 	fmt.Print("打包:")
 	//打包压缩文件
 	tempFolder.Compress(tgzPath)
+	//删除临时文件夹
+	tempFolder.Del()
 	//上传文件
 	if config.Config.IsUpload {
 		//判断配置
@@ -70,10 +75,11 @@ func main() {
 		}
 		if config.Config.IsPublic {
 			//发布
-
+			fmt.Printf("上传并发布至:%v.%v\n", config.Config.App, config.Config.Service)
+			Tars.UploadAndPublic(tgzPath)
 		} else {
 			//上传
-			fmt.Printf("正在上传:%v.%v\n", config.Config.App, config.Config.Service)
+			fmt.Printf("上传至:%v.%v\n", config.Config.App, config.Config.Service)
 			Tars.Upload(tgzPath)
 		}
 	}
