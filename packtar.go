@@ -44,7 +44,6 @@ func main() {
 	Exec.Input(buildStr)
 	Exec.Input("exit")
 	_ = Exec.Cmd.Wait()
-
 	if Exec.IsErr {
 		return
 	}
