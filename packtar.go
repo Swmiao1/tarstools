@@ -4,10 +4,10 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"tartools/cmd"
-	"tartools/config"
-	"tartools/tars"
-	"tartools/util"
+	"tarstools/cmd"
+	"tarstools/config"
+	"tarstools/tars"
+	"tarstools/util"
 	"time"
 )
 
