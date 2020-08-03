@@ -47,7 +47,29 @@ func (c *Client) Post() *http.Response {
 	return response
 }
 
-func (c *Client) createRequest() (*http.Request, error) {
+func (c *Client) Get() *http.Response {
+	var (
+		err      error
+		request  *http.Request
+		response *http.Response
+	)
+	fmt.Println("POST:", c.Url)
+	//创建请求数据
+	request, err = c.createRequest(true)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
+		return nil
+	}
+	client := &http.Client{}
+	response, err = client.Do(request)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
+		os.Exit(1)
+	}
+	return response
+}
+
+func (c *Client) createRequest(Get ...bool) (Request *http.Request, err error) {
 	//创建body
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
@@ -75,7 +97,12 @@ func (c *Client) createRequest() (*http.Request, error) {
 		_ = writer.WriteField(key, val)
 	}
 	writer.Close()
-	request, err := http.NewRequest("POST", c.Url, body)
+	if len(Get) > 0 {
+		Request, err = http.NewRequest("GET", c.Url, body)
+	} else {
+		Request, err = http.NewRequest("POST", c.Url, body)
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -83,8 +110,7 @@ func (c *Client) createRequest() (*http.Request, error) {
 	c.Header["Content-Type"] = writer.FormDataContentType()
 	for key, val := range c.Header {
 		//写入header
-		request.Header.Set(key, val)
+		Request.Header.Set(key, val)
 	}
-
-	return request, err
+	return
 }

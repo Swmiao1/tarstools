@@ -19,6 +19,7 @@ type config struct {
 	IsPublic    bool              `json:"-"`
 	IsClear     bool              `json:"-"`
 	IsHelp      bool              `json:"-"`
+	Status      bool              `json:"-"`
 }
 
 func (c *config) ReadFile() bool {
@@ -79,6 +80,7 @@ func init() {
 	flag.BoolVar(&Config.IsPublic, "p", false, "是否发布")
 	flag.BoolVar(&Config.IsClear, "clear", false, "清理tgz")
 	flag.BoolVar(&Config.IsHelp, "h", false, "帮助")
+	flag.BoolVar(&Config.Status, "status", false, "查看状态")
 
 	flag.StringVar(&Config.Tag, "t", "", "编译标签")
 

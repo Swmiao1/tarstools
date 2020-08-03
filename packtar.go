@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-const version = "v0.0.7"
+const version = "v0.0.8"
 
 func main() {
 	fmt.Println("version:", version)
@@ -25,6 +25,15 @@ func main() {
 	//是否是清理 tgz
 	if config.Config.IsClear {
 		util.ClearTgz()
+	}
+	//查看状态
+	if config.Config.Status {
+		Tars := tars.Tars{
+			Url:   config.Config.TarsUrl,
+			Token: config.Config.Token,
+		}
+		Tars.ServerList(config.Config.App, config.Config.Service)
+		return
 	}
 	//读取配置文件
 	if !config.Config.ReadFile() {

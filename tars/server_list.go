@@ -30,9 +30,10 @@ func (t *Tars) ServerList(app string, service string) {
 	clint.Header["Cookie"] = fmt.Sprintf("uid=admin; ticket=%v; dcache=true", t.Token)
 	//设置参数
 	clint.Params["tree_node_id"] = fmt.Sprintf("1%v.5%v", app, service)
-	Response := clint.Post()
+	Response := clint.Get()
 	defer Response.Body.Close()
 	body, _ := ioutil.ReadAll(Response.Body)
+	fmt.Println(string(body))
 	if Response.StatusCode == 200 {
 		data := serverListResponse{}
 		_ = json.Unmarshal(body, &data)
@@ -40,7 +41,7 @@ func (t *Tars) ServerList(app string, service string) {
 			if len(data.Data) < 1 {
 				fmt.Fprintln(os.Stderr, "服务不存在")
 			} else {
-				fmt.Printf("服务状态:%v,设置状态:%v,请检查服务状态\n", data.Data[0].PresentState, data.Data[0].SettingState)
+				fmt.Printf("服务状态:%v,设置状态:%v\n", data.Data[0].PresentState, data.Data[0].SettingState)
 			}
 		} else {
 			fmt.Fprintln(os.Stderr, data.ErrMsg)
