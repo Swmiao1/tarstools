@@ -18,8 +18,8 @@ type serverListResponseData struct {
 	Application  string `json:"application"`
 	ServerName   string `json:"server_name"`
 	NodeName     string `json:"node_name"`
-	SettingState bool   `json:"setting_state"`
-	PresentState bool   `json:"present_state"`
+	SettingState string `json:"setting_state"`
+	PresentState string `json:"present_state"`
 	PatchVersion string `json:"patch_version"`
 }
 
@@ -33,7 +33,7 @@ func (t *Tars) ServerList(app string, service string) {
 	Response := clint.Get()
 	defer Response.Body.Close()
 	body, _ := ioutil.ReadAll(Response.Body)
-	fmt.Println(string(body))
+	//fmt.Println(string(body))
 	if Response.StatusCode == 200 {
 		data := serverListResponse{}
 		_ = json.Unmarshal(body, &data)
