@@ -25,6 +25,11 @@ func main() {
 	//是否是清理 tgz
 	if config.Config.IsClear {
 		util.ClearTgz()
+
+	}
+	//读取配置文件
+	if !config.Config.ReadFile() {
+		return
 	}
 	//查看状态
 	if config.Config.Status {
@@ -33,10 +38,6 @@ func main() {
 			Token: config.Config.Token,
 		}
 		Tars.ServerList(config.Config.App, config.Config.Service)
-		return
-	}
-	//读取配置文件
-	if !config.Config.ReadFile() {
 		return
 	}
 	//生成临时目录
