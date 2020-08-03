@@ -85,6 +85,8 @@ func main() {
 			fmt.Printf("上传至:%v.%v\n", config.Config.App, config.Config.Service)
 			Tars.Upload(tgzPath)
 		}
+		//获取服务状态
+		Tars.ServerList(config.Config.App, config.Config.Service)
 	}
 
 }
