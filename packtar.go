@@ -5,13 +5,15 @@ import (
 	"fmt"
 	"github.com/Swmiao1/tarstools/cmd"
 	"github.com/Swmiao1/tarstools/config"
+	"github.com/Swmiao1/tarstools/tar"
 	"github.com/Swmiao1/tarstools/tars"
 	"github.com/Swmiao1/tarstools/util"
 	"os"
+	"path/filepath"
 	"time"
 )
 
-const version = "v0.0.11"
+const version = "v0.1.1"
 
 func main() {
 	fmt.Println("version:", version)
@@ -25,7 +27,6 @@ func main() {
 	//是否是清理 tgz
 	if config.Config.IsClear {
 		util.ClearTgz()
-
 	}
 	//读取配置文件
 	if !config.Config.ReadFile() {
@@ -40,10 +41,6 @@ func main() {
 		Tars.ServerList(config.Config.App, config.Config.Service)
 		return
 	}
-	//生成临时目录
-	tempFolder := util.NewFolder(fmt.Sprintf("temp_%v_%v/%v", config.Config.Service, time.Now().Nanosecond(), config.Config.Service))
-	tempFolder.Make()
-	defer tempFolder.Del()
 	//编译文件
 	Exec := cmd.NewCmd()
 	//Exec.Log()
@@ -55,7 +52,8 @@ func main() {
 	if len(config.Config.Tag) > 0 {
 		tags = " -tags " + config.Config.Tag
 	}
-	buildStr := fmt.Sprintf("go build -ldflags \"-s -w\"%v -o %v", tags, tempFolder.Path+"/"+config.Config.Service)
+	buildName := config.Config.Service + ".temp"
+	buildStr := fmt.Sprintf("go build -ldflags \"-s -w\"%v -o %v", tags, buildName)
 	fmt.Println("正在编译:", buildStr)
 	Exec.Input(buildStr)
 	Exec.Input("exit")
@@ -63,18 +61,27 @@ func main() {
 	if Exec.IsErr {
 		return
 	}
+	//生成文件列表
 	//移入包含文件
+	config.Config.IncludeFile[buildName] = config.Config.Service
+	fileList := make([]tar.FileList, len(config.Config.IncludeFile))
+	var i = 0
 	for k, s := range config.Config.IncludeFile {
-		util.CopyFile(k, tempFolder.Path+s)
+		fileList[i].FillPath = fmt.Sprintf("%v/%v", config.Config.Service, s)
+		fileList[i].BasePath, _ = filepath.Abs(k)
+		i++
 	}
 	//打包压缩文件
 	//生成随机文件名
 	tgzPath := fmt.Sprintf("%v_%v_%v.tgz", config.Config.App, config.Config.Service, time.Now().Format("01_02_15_04_05"))
-	fmt.Print("打包:")
-	//打包压缩文件
-	tempFolder.Compress(tgzPath)
-	//删除临时文件夹
-	tempFolder.Del()
+	fmt.Println("打包中")
+	tarFile := tar.NewFile(tgzPath)
+	if err := tarFile.Compress(&fileList); err != nil {
+		fmt.Println("-失败:", err.Error())
+	}
+	//关闭压缩文件,删除编译文件
+	tarFile.Close()
+	_ = os.Remove(buildName)
 	//上传文件
 	if config.Config.IsUpload {
 		//判断配置

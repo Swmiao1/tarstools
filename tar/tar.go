@@ -41,28 +41,33 @@ func (f *File) Close() {
 }
 
 type FileList struct {
-	Info     os.FileInfo
-	BasePath string
-	FillPath string
+	BasePath string // 本地路径
+	FillPath string // 压缩路径
 }
 
 func (f *File) Compress(list *[]FileList) error {
 	for _, file := range *list {
+		//获取文件INFO
+		fileInfo, err := os.Stat(file.BasePath)
+		if err != nil {
+			return err
+		}
 		//获取 HEADER
-		header, err := tar.FileInfoHeader(file.Info, "")
+		header, err := tar.FileInfoHeader(fileInfo, "")
 		if err != nil {
 			return err
 		}
 		//转换成linux符号
-		header.Name = filepath.ToSlash(file.BasePath)
+		header.Name = filepath.ToSlash(file.FillPath)
 		//写入文件头
 		if err = f.Tar.WriteHeader(header); err != nil {
 			return err
 		}
 		//进行压缩
-		if !file.Info.IsDir() {
+		if !fileInfo.IsDir() {
 			//打开文件
-			buf, err := os.Open(file.FillPath)
+			fmt.Print(file.FillPath, " -")
+			buf, err := os.Open(file.BasePath)
 			if err != nil {
 				fmt.Println("文件打开失败", err)
 				panic(err)
@@ -72,6 +77,7 @@ func (f *File) Compress(list *[]FileList) error {
 				return err
 			}
 			_ = buf.Close()
+			fmt.Println("OK")
 		}
 	}
 	fmt.Println("打包完成")

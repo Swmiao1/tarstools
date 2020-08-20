@@ -73,9 +73,10 @@ func (c *GTPConnection) listenErr() {
 		}
 		str := string(util.ConvertToByte(string(buf[:n]), "gbk", "utf8"))
 		fmt.Fprintln(os.Stderr, str)
+
 		c.IsErr = true
-		c.outText <- cmdText{Text: str, err: true}
-		os.Exit(1)
+		//c.outText <- cmdText{Text: str, err: true}
+		os.Exit(0)
 	}
 }
 
